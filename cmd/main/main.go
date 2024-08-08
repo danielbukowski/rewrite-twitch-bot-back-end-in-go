@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	cc "github.com/danielbukowski/twitch-chatbot/internal/command_controller"
+	c "github.com/danielbukowski/twitch-chatbot/internal/commands"
 	credentialstorage "github.com/danielbukowski/twitch-chatbot/internal/credential_storage"
 	"github.com/gempir/go-twitch-irc/v4"
 	"github.com/joho/godotenv"
@@ -39,6 +40,7 @@ func main() {
 	ircClient.Join(channelName)
 
 	commandController := cc.NewCommandController()
+	commandController.AddCommand("!ping", c.Ping)
 
 	ircClient.OnPrivateMessage(func(privateMessage twitch.PrivateMessage) {
 		userMessage := privateMessage.Message
