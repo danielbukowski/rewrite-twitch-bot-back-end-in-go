@@ -5,13 +5,12 @@ import (
 	"os"
 	"strings"
 
+	cc "github.com/danielbukowski/twitch-chatbot/internal/command_controller"
 	credentialstorage "github.com/danielbukowski/twitch-chatbot/internal/credential_storage"
 	"github.com/gempir/go-twitch-irc/v4"
 	"github.com/joho/godotenv"
 	"github.com/nicklaw5/helix/v2"
 )
-
-const COMMAND_PREFIX string = "!"
 
 func main() {
 	err := godotenv.Load("../../.dev.env")
@@ -39,15 +38,16 @@ func main() {
 	ircClient := twitch.NewClient(chatbotName, "oauth:"+accessCredentials.AccessToken)
 	ircClient.Join(channelName)
 
-	ircClient.OnPrivateMessage(func(message twitch.PrivateMessage) {
-		if !strings.HasPrefix(message.Message, COMMAND_PREFIX) {
+	commandController := cc.NewCommandController()
+
+	ircClient.OnPrivateMessage(func(privateMessage twitch.PrivateMessage) {
+		userMessage := privateMessage.Message
+
+		if !strings.HasPrefix(userMessage, cc.COMMAND_PREFIX) {
 			return
 		}
 
-		if strings.EqualFold(message.Message, fmt.Sprintf("%sping", COMMAND_PREFIX)) {
-			ircClient.Say(message.Channel, fmt.Sprintf("Pong! @%s", message.User.DisplayName))
-		}
-
+		commandController.CallCommand(userMessage, &privateMessage, ircClient)
 	})
 
 	ircClient.OnConnect(func() {
